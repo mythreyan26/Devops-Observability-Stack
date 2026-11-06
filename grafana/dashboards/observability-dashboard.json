@@ -23,19 +23,229 @@
   "panels": [
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "id": 10,
+      "title": "Application Health",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "HEALTHY (UP)" } }, "type": "value" }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
       },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "up{job=\"app\"}",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "id": 11,
+      "title": "Total Requests",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "sum(http_requests_total)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "id": 3,
+      "title": "Error Count (Status 500)",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "sum(http_requests_total{status=\"500\"}) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "id": 12,
+      "title": "Error Rate % (5xx)",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))) * 100 or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "id": 13,
+      "title": "Heap Memory Used",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "yellow", "value": 150 },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "unit": "decmbytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "nodejs_heap_size_used_bytes / 1024 / 1024",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "id": 14,
+      "title": "Process CPU Usage",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 85 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "rate(nodejs_process_cpu_seconds_total[1m]) * 100",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "id": 1,
       "title": "Requests per Second (RPS)",
       "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -47,31 +257,18 @@
             "showPoints": "auto",
             "spanNulls": false
           },
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "unit": "reqps"
         },
         "overrides": []
       },
       "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": ["mean", "lastNotNull", "max"]
-        }
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull", "max"] }
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
           "expr": "sum by (route) (rate(http_requests_total[1m]))",
           "legendFormat": "{{route}}",
@@ -82,19 +279,11 @@
     },
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "id": 2,
       "title": "Average Response Time",
       "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -106,31 +295,18 @@
             "showPoints": "auto",
             "spanNulls": false
           },
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "unit": "s"
         },
         "overrides": []
       },
       "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": ["mean", "lastNotNull", "max"]
-        }
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": ["mean", "lastNotNull", "max"] }
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
           "expr": "sum by (route) (rate(http_request_duration_seconds_sum[1m])) / sum by (route) (rate(http_request_duration_seconds_count[1m]))",
           "legendFormat": "{{route}}",
@@ -141,99 +317,14 @@
     },
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
-      "title": "Error Count (Status 500)",
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "sum(http_requests_total{status=\"500\"}) or vector(0)",
-          "legendFormat": "HTTP 500 Errors",
-          "range": false,
-          "instant": true,
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 8,
-        "w": 18,
-        "x": 6,
-        "y": 8
-      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 12 },
       "id": 4,
       "title": "Requests by Route",
       "type": "bargauge",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
+          "color": { "mode": "palette-classic" },
           "unit": "short"
         },
         "overrides": []
@@ -241,19 +332,12 @@
       "options": {
         "displayMode": "gradient",
         "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showUnfilled": true
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "editorMode": "code",
           "expr": "sum by (route) (http_requests_total)",
           "legendFormat": "{{route}}",
@@ -265,19 +349,49 @@
     },
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 16
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 12 },
+      "id": 15,
+      "title": "HTTP 5xx Error Rate Over Time",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "unit": "percent"
+        },
+        "overrides": []
       },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))) * 100",
+          "legendFormat": "Error Rate %",
+          "range": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 19 },
       "id": 5,
       "title": "Application Live Logs (Loki)",
       "type": "logs",
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
+      "datasource": { "type": "loki", "uid": "loki" },
       "options": {
         "showLabels": false,
         "wrapLogMessage": true,
@@ -288,10 +402,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
+          "datasource": { "type": "loki", "uid": "loki" },
           "editorMode": "code",
           "expr": "{app=\"nodejs-demo-app\"}",
           "queryType": "range",
@@ -303,16 +414,11 @@
   "refresh": "5s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["observability", "express", "prometheus", "loki"],
-  "time": {
-    "from": "now-15m",
-    "to": "now"
-  },
-  "timepicker": {
-    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
-  },
+  "tags": ["observability", "express", "prometheus", "loki", "jaeger"],
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"] },
   "timezone": "browser",
   "title": "DevOps Observability Dashboard",
   "uid": "devops-observability-overview",
-  "version": 2
+  "version": 3
 }

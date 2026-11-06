@@ -5,6 +5,7 @@ const express = require('express');
 const client = require('prom-client');
 const winston = require('winston');
 const LokiTransport = require('winston-loki');
+const { trace, context } = require('@opentelemetry/api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +67,12 @@ const httpRequestDurationSeconds = new client.Histogram({
 app.use((req, res, next) => {
   const startHrTime = process.hrtime();
 
+  // Capture active OpenTelemetry span context for trace-to-log correlation
+  const activeSpan = trace.getSpan(context.active());
+  const spanContext = activeSpan ? activeSpan.spanContext() : null;
+  const traceId = spanContext ? spanContext.traceId : null;
+  const spanId = spanContext ? spanContext.spanId : null;
+
   res.on('finish', () => {
     const elapsedHrTime = process.hrtime(startHrTime);
     const durationInSeconds = elapsedHrTime[0] + elapsedHrTime[1] / 1e9;
@@ -88,14 +95,21 @@ app.use((req, res, next) => {
       status: status
     }, durationInSeconds);
 
-    // 3. Output Structured JSON Log (sent to Console AND Loki)
-    logger.info('HTTP request completed', {
+    // 3. Output Structured JSON Log (with correlated trace_id and span_id)
+    const logData = {
       method: req.method,
       route: route,
       status: res.statusCode,
       duration: `${durationInMs}ms`,
       duration_seconds: Number(durationInSeconds.toFixed(4))
-    });
+    };
+
+    if (traceId) {
+      logData.trace_id = traceId;
+      logData.span_id = spanId;
+    }
+
+    logger.info('HTTP request completed', logData);
   });
 
   next();
@@ -140,10 +154,14 @@ app.get('/metrics', async (req, res) => {
 // ==========================================
 // 5. Start Server
 // ==========================================
-app.listen(PORT, () => {
-  logger.info(`Observability demo app running on port ${PORT}`, {
-    port: PORT,
-    environment: process.env.NODE_ENV || 'development',
-    loki_url: LOKI_URL
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(`Observability demo app running on port ${PORT}`, {
+      port: PORT,
+      environment: process.env.NODE_ENV || 'development',
+      loki_url: LOKI_URL
+    });
   });
-});
+}
+
+module.exports = app;

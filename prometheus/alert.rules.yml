@@ -1,0 +1,32 @@
+groups:
+  - name: observability_stack_alerts
+    rules:
+      # Alert 1: Service is Down
+      - alert: ServiceDown
+        expr: up{job="app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Observability app is DOWN"
+          description: "Target {{ $labels.instance }} of job {{ $labels.job }} has been unreachable for more than 1 minute."
+
+      # Alert 2: High Error Rate (HTTP 5xx > 5% of all requests)
+      - alert: HighErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[2m])) / sum(rate(http_requests_total[2m]))) * 100 > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP 5xx error rate detected"
+          description: "HTTP 5xx errors account for {{ $value | printf \"%.2f\" }}% of requests over the last 2 minutes."
+
+      # Alert 3: High Response Latency (Average duration > 1.5 seconds)
+      - alert: HighLatency
+        expr: (sum by (route) (rate(http_request_duration_seconds_sum[2m])) / sum by (route) (rate(http_request_duration_seconds_count[2m]))) > 1.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency on route {{ $labels.route }}"
+          description: "Average latency on route {{ $labels.route }} is {{ $value | printf \"%.2f\" }}s (threshold: 1.5s)."

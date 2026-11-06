@@ -4,7 +4,9 @@
   "description": "Sample Node.js Express app instrumented with Prometheus metrics, Winston JSON logging, Loki log streaming, and OpenTelemetry Jaeger tracing",
   "main": "server.js",
   "scripts": {
-    "start": "node -r ./tracing.js server.js"
+    "start": "node -r ./tracing.js server.js",
+    "test": "node --test",
+    "lint": "node --check server.js && node --check tracing.js"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
