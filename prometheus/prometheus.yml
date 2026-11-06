@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Scrape job for our Node.js Express demo application
+  - job_name: 'app'
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['app:3000']
+
+  # Scrape Prometheus itself for internal monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
