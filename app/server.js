@@ -1,5 +1,5 @@
 // Initialize OpenTelemetry Tracing BEFORE requiring express, http or other packages
-require('./tracing');
+const sdk = require('./tracing');
 
 const express = require('express');
 const client = require('prom-client');
@@ -14,8 +14,23 @@ const LOKI_URL = process.env.LOKI_URL || 'http://loki:3100';
 // ==========================================
 // 1. Winston Logger Setup (Console + Loki)
 // ==========================================
-// Configures winston to format every log line as a structured JSON object.
-// We output to Console (stdout) and directly ship to Loki (centralized logging).
+// In test environments, disable background interval batching to allow clean test exit.
+// In production/development, keep full batching enabled.
+const lokiTransport = new LokiTransport({
+  host: LOKI_URL,
+  labels: { app: 'nodejs-demo-app' },
+  json: true,
+  batching: process.env.NODE_ENV !== 'test',
+  timeout: process.env.NODE_ENV === 'test' ? 500 : 5000,
+  format: winston.format.json(),
+  replaceTimestamp: true,
+  onConnectionError: (err) => {
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Loki transport connection warning:', err.message);
+    }
+  }
+});
+
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -27,16 +42,7 @@ const logger = winston.createLogger({
     new winston.transports.Console(),
 
     // 2. Loki transport for centralized log aggregation
-    new LokiTransport({
-      host: LOKI_URL,
-      labels: { app: 'nodejs-demo-app' },
-      json: true,
-      format: winston.format.json(),
-      replaceTimestamp: true,
-      onConnectionError: (err) => {
-        console.error('Loki transport connection warning:', err.message);
-      }
-    })
+    lokiTransport
   ]
 });
 
@@ -150,6 +156,17 @@ app.get('/metrics', async (req, res) => {
     res.status(500).end(err.message);
   }
 });
+
+// Helper for clean teardown during testing and graceful shutdown
+app.closeApp = async () => {
+  if (lokiTransport && typeof lokiTransport.close === 'function') {
+    await lokiTransport.close();
+  }
+  logger.close();
+};
+
+app.logger = logger;
+app.sdk = sdk;
 
 // ==========================================
 // 5. Start Server

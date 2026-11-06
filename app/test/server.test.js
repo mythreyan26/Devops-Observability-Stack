@@ -1,12 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const http = require('node:http');
 
-// Load tracing mock/noop if needed before server
-process.env.PORT = '0'; // Ephemeral port
+// Configure test environment before loading application
 process.env.NODE_ENV = 'test';
-process.env.LOKI_URL = 'http://localhost:3100'; // mock URL for test
+process.env.PORT = '0'; // Ephemeral port
+process.env.LOKI_URL = process.env.LOKI_URL || 'http://127.0.0.1:3100';
+process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || 'http://127.0.0.1:4318/v1/traces';
 
+const sdk = require('../tracing');
 const app = require('../server');
 
 test('Observability Application Suite', async (t) => {
@@ -24,8 +25,22 @@ test('Observability Application Suite', async (t) => {
   });
 
   t.after(async () => {
+    // 1. Terminate all open keep-alive connections and close HTTP server
     if (server) {
+      if (typeof server.closeAllConnections === 'function') {
+        server.closeAllConnections();
+      }
       await new Promise((resolve) => server.close(resolve));
+    }
+
+    // 2. Close logger and Loki transport handles
+    if (typeof app.closeApp === 'function') {
+      await app.closeApp();
+    }
+
+    // 3. Gracefully shutdown OpenTelemetry SDK
+    if (sdk && typeof sdk.shutdown === 'function') {
+      await sdk.shutdown().catch(() => {});
     }
   });
 

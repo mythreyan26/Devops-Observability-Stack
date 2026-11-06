@@ -14,6 +14,7 @@ process.env.OTEL_SERVICE_NAME = serviceName;
 // Configure the OTLP HTTP trace exporter to push spans to Jaeger
 const traceExporter = new OTLPTraceExporter({
   url: tracesEndpoint,
+  timeoutMillis: process.env.NODE_ENV === 'test' ? 500 : 10000,
 });
 
 // Initialize the OpenTelemetry Node SDK
@@ -32,7 +33,9 @@ const sdk = new NodeSDK({
 
 // Start tracing
 sdk.start();
-console.log(`[OpenTelemetry] Distributed tracing started for service '${serviceName}' exporting to '${tracesEndpoint}'`);
+if (process.env.NODE_ENV !== 'test') {
+  console.log(`[OpenTelemetry] Distributed tracing started for service '${serviceName}' exporting to '${tracesEndpoint}'`);
+}
 
 // Graceful shutdown handling
 process.on('SIGTERM', () => {
